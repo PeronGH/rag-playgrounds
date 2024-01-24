@@ -1,6 +1,6 @@
 import { Document, SimpleNodeParser } from "llamaindex";
 import OpenAI from "openai";
-import { TextWithEmbeddings } from "~/types";
+
 
 export interface ChunkDocumentsParams {
   documents: string[];
@@ -35,11 +35,4 @@ export async function getEmbeddings(texts: string[]): Promise<number[][]> {
   });
 
   return data.map(({ embedding }) => embedding);
-}
-
-export async function getTextWithEmbeddings(
-  texts: string[],
-): Promise<TextWithEmbeddings[]> {
-  const embeddings = await getEmbeddings(texts);
-  return texts.map((text, i) => ({ text, embeddings: embeddings[i] }));
 }

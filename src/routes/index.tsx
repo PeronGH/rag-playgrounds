@@ -5,14 +5,23 @@ import { DocumentChunkingSettings } from "~/components/document-chunking-setting
 import { DocumentsList } from "~/components/documents-list";
 import { EmbeddingsList } from "~/components/embeddings-list";
 import { FilesInputButton } from "~/components/files-input-button";
-import { TextWithEmbeddings } from "~/types";
+import { QueryInput } from "~/components/query-input";
+import { SimilarChunksList } from "~/components/similar-chunks-list";
+import { TextWithEmbeddings, TextWithSimilarity } from "~/types";
 import { CHECKED_CHECKBOX, UNCHECKED_CHECKBOX } from "~/utils/constants";
-import { chunkDocuments, getTextWithEmbeddings } from "~/utils/llamaindex";
+import {
+  calculateCosineSimilarity,
+  getTextWithEmbeddings,
+} from "~/utils/embeddings";
+import { chunkDocuments, getEmbeddings } from "~/utils/llamaindex";
 
 export default function Home() {
   const [documents, setDocuments] = createStore<string[]>([]);
   const [chunks, setChunks] = createSignal<string[][]>([]);
   const [embeddings, setEmbeddings] = createSignal<TextWithEmbeddings[]>([]);
+  const [similarChunks, setSimilarChunks] = createSignal<
+    TextWithSimilarity[]
+  >([]);
 
   const stage: Accessor<number> = () => {
     let stage = 0;
@@ -22,6 +31,9 @@ export default function Home() {
         stage = 2;
         if (embeddings().length > 0) {
           stage = 3;
+          if (similarChunks().length > 0) {
+            stage = 4;
+          }
         }
       }
     }
@@ -29,7 +41,7 @@ export default function Home() {
   };
 
   return (
-    <main class="container mt-4">
+    <main class="container py-4">
       <h1>RAG Playgrounds</h1>
       <h2>
         {stage() >= 1 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
@@ -55,12 +67,12 @@ export default function Home() {
           Add Empty
         </button>
       </div>
-      <DocumentsList
-        documents={documents}
-        onEdit={(idx, content) =>
-          setDocuments(produce((documents) => documents[idx] = content))}
-      />
       <Show when={stage() >= 1}>
+        <DocumentsList
+          documents={documents}
+          onEdit={(idx, content) =>
+            setDocuments(produce((documents) => documents[idx] = content))}
+        />
         <h2>
           {stage() >= 2 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
           Step 2. Chunk Documents
@@ -71,8 +83,8 @@ export default function Home() {
               await chunkDocuments({ chunkSize, chunkOverlap, documents }),
             )}
         />
-        <ChunksList chunks={chunks} />
         <Show when={stage() >= 2}>
+          <ChunksList chunks={chunks} />
           <h2>
             {stage() >= 3 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
             Step 3. Get Embeddings
@@ -86,7 +98,35 @@ export default function Home() {
           >
             Get Embeddings
           </button>
-          <EmbeddingsList embeddings={embeddings} />
+          <Show when={stage() >= 3}>
+            <EmbeddingsList embeddings={embeddings} />
+            <h2>
+              {stage() >= 4 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
+              Step 4. Query Similar Embeddings
+            </h2>
+            <QueryInput
+              onSubmit={async (query) => {
+                const [queryEmbeddings] = await getEmbeddings([query]);
+
+                setSimilarChunks(
+                  embeddings().map(({ text, embeddings }) => ({
+                    text,
+                    similarity: calculateCosineSimilarity(
+                      queryEmbeddings,
+                      embeddings,
+                    ),
+                  })).toSorted((a, b) => b.similarity - a.similarity),
+                );
+              }}
+            />
+            <Show when={stage() >= 4}>
+              <SimilarChunksList similarities={similarChunks} />
+              <h2>
+                {stage() >= 5 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
+                Step 5. Text Generation
+              </h2>
+            </Show>
+          </Show>
         </Show>
       </Show>
     </main>
