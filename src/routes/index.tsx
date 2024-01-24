@@ -1,19 +1,25 @@
-import { createSignal } from "solid-js";
+import { Accessor, createSignal, Show } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { DocumentsList } from "~/components/documents-list";
 import { FilesInputButton } from "~/components/files-input-button";
-import { FileDocument } from "~/types";
 import { CHECKED_CHECKBOX, UNCHECKED_CHECKBOX } from "~/utils/constants";
 
 export default function Home() {
-  const [stage, setStage] = createSignal(1);
-  const [documents, setDocuments] = createStore<FileDocument[]>([]);
+  const [documents, setDocuments] = createStore<string[]>([]);
+
+  const stage: Accessor<number> = () => {
+    let stage = 0;
+    if (documents.length > 0) {
+      stage = 1;
+    }
+    return stage;
+  };
 
   return (
     <main class="container mt-4">
       <h1>RAG Playgrounds</h1>
       <h2>
-        {documents.length ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
+        {stage() >= 1 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
         Step 1. Choose Your Documents
       </h2>
       <div role="group">
@@ -24,36 +30,29 @@ export default function Home() {
             );
 
             setDocuments(
-              produce((documents) =>
-                documents.push(
-                  ...fileContents.map((content) => ({
-                    id: crypto.randomUUID(),
-                    content,
-                  })),
-                )
-              ),
+              produce((documents) => documents.push(...fileContents)),
             );
           }}
         />
         <button
           class="secondary"
-          onClick={() =>
-            setDocuments(produce((documents) =>
-              documents.push({ id: crypto.randomUUID(), content: "" })
-            ))}
+          onclick={() =>
+            setDocuments(produce((documents) => documents.push("")))}
         >
           Add Empty
         </button>
       </div>
       <DocumentsList
         documents={documents}
-        onEdit={(id, content) =>
-          setDocuments(
-            (document) =>
-              document.id === id,
-            produce((document) => document.content = content),
-          )}
+        onEdit={(idx, content) =>
+          setDocuments(produce((documents) => documents[idx] = content))}
       />
+      <Show when={stage() >= 1}>
+        <h2>
+          {stage() >= 2 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
+          Step 2. Chunk Documents
+        </h2>
+      </Show>
     </main>
   );
 }

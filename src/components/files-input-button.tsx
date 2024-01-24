@@ -13,8 +13,10 @@ export const FilesInputButton: Component<FilesInputButtonProps> = (
         const input = document.createElement("input");
         input.type = "file";
         input.multiple = true;
+        input.accept = "text/*";
         input.onchange = () => {
           onChange(input.files!);
+          input.remove();
         };
         input.click();
       }}

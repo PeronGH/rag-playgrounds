@@ -1,9 +1,8 @@
-import { Component, For } from "solid-js";
-import { FileDocument } from "~/types";
+import { Component, Index } from "solid-js";
 
 export interface DocumentsListProps {
-  documents: FileDocument[];
-  onEdit: (id: string, content: string) => void;
+  documents: string[];
+  onEdit?: (idx: number, content: string) => void;
 }
 
 export const DocumentsList: Component<DocumentsListProps> = ({
@@ -11,19 +10,21 @@ export const DocumentsList: Component<DocumentsListProps> = ({
   onEdit,
 }) => {
   return (
-    <div class="flex gap-x-2 overflow-x-auto">
-      <For each={documents}>
-        {(document) => (
+    <div class="flex gap-x-2 overflow-x-auto p-8">
+      <Index each={documents}>
+        {(document, i) => (
           <article class="min-w-96">
-            <header>{document.id}</header>
+            <header>Document {i + 1}</header>
             <textarea
               class="resize-none h-96"
-              value={document.content}
-              onInput={(e) => onEdit(document.id, e.currentTarget.value)}
+              value={document()}
+              readonly={!onEdit}
+              oninput={onEdit &&
+                ((e) => onEdit(i, e.currentTarget.value))}
             />
           </article>
         )}
-      </For>
+      </Index>
     </div>
   );
 };
