@@ -3,13 +3,16 @@ import { createStore, produce } from "solid-js/store";
 import { ChunksList } from "~/components/chunks-list";
 import { DocumentChunkingSettings } from "~/components/document-chunking-settings";
 import { DocumentsList } from "~/components/documents-list";
+import { EmbeddingsList } from "~/components/embeddings-list";
 import { FilesInputButton } from "~/components/files-input-button";
+import { TextWithEmbeddings } from "~/types";
 import { CHECKED_CHECKBOX, UNCHECKED_CHECKBOX } from "~/utils/constants";
-import { chunkDocuments } from "~/utils/llamaindex";
+import { chunkDocuments, getTextWithEmbeddings } from "~/utils/llamaindex";
 
 export default function Home() {
   const [documents, setDocuments] = createStore<string[]>([]);
   const [chunks, setChunks] = createSignal<string[][]>([]);
+  const [embeddings, setEmbeddings] = createSignal<TextWithEmbeddings[]>([]);
 
   const stage: Accessor<number> = () => {
     let stage = 0;
@@ -17,6 +20,9 @@ export default function Home() {
       stage = 1;
       if (chunks().length > 0) {
         stage = 2;
+        if (embeddings().length > 0) {
+          stage = 3;
+        }
       }
     }
     return stage;
@@ -66,6 +72,22 @@ export default function Home() {
             )}
         />
         <ChunksList chunks={chunks} />
+        <Show when={stage() >= 2}>
+          <h2>
+            {stage() >= 3 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
+            Step 3. Get Embeddings
+          </h2>
+          <button
+            class="w-full"
+            onclick={async () =>
+              setEmbeddings(
+                await getTextWithEmbeddings(chunks().flatMap((chunk) => chunk)),
+              )}
+          >
+            Get Embeddings
+          </button>
+          <EmbeddingsList embeddings={embeddings} />
+        </Show>
       </Show>
     </main>
   );
