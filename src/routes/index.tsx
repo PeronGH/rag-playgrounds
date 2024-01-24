@@ -1,16 +1,23 @@
 import { Accessor, createSignal, Show } from "solid-js";
 import { createStore, produce } from "solid-js/store";
+import { ChunksList } from "~/components/chunks-list";
+import { DocumentChunkingSettings } from "~/components/document-chunking-settings";
 import { DocumentsList } from "~/components/documents-list";
 import { FilesInputButton } from "~/components/files-input-button";
 import { CHECKED_CHECKBOX, UNCHECKED_CHECKBOX } from "~/utils/constants";
+import { chunkDocuments } from "~/utils/llamaindex";
 
 export default function Home() {
   const [documents, setDocuments] = createStore<string[]>([]);
+  const [chunks, setChunks] = createSignal<string[][]>([]);
 
   const stage: Accessor<number> = () => {
     let stage = 0;
     if (documents.length > 0) {
       stage = 1;
+      if (chunks().length > 0) {
+        stage = 2;
+      }
     }
     return stage;
   };
@@ -52,6 +59,13 @@ export default function Home() {
           {stage() >= 2 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
           Step 2. Chunk Documents
         </h2>
+        <DocumentChunkingSettings
+          onSubmit={async ({ chunkSize, chunkOverlap }) =>
+            setChunks(
+              await chunkDocuments({ chunkSize, chunkOverlap, documents }),
+            )}
+        />
+        <ChunksList chunks={chunks} />
       </Show>
     </main>
   );
