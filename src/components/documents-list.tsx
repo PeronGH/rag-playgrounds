@@ -1,4 +1,4 @@
-import { Component, Index } from "solid-js";
+import { Accessor, Component, Index } from "solid-js";
 
 export interface DocumentsListProps {
   documents: string[];

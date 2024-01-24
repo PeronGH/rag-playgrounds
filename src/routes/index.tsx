@@ -16,6 +16,7 @@ import {
 import { chunkDocuments, getEmbeddings } from "~/utils/llamaindex";
 
 export default function Home() {
+  const [loading, setLoading] = createSignal(false);
   const [documents, setDocuments] = createStore<string[]>([]);
   const [chunks, setChunks] = createSignal<string[][]>([]);
   const [embeddings, setEmbeddings] = createSignal<TextWithEmbeddings[]>([]);
@@ -41,7 +42,7 @@ export default function Home() {
   };
 
   return (
-    <main class="container py-4">
+    <main class="container p-4">
       <h1>RAG Playgrounds</h1>
       <h2>
         {stage() >= 1 ? CHECKED_CHECKBOX : UNCHECKED_CHECKBOX}{" "}
@@ -78,10 +79,14 @@ export default function Home() {
           Step 2. Chunk Documents
         </h2>
         <DocumentChunkingSettings
-          onSubmit={async ({ chunkSize, chunkOverlap }) =>
+          loading={loading}
+          onSubmit={async ({ chunkSize, chunkOverlap }) => {
+            setLoading(true);
             setChunks(
               await chunkDocuments({ chunkSize, chunkOverlap, documents }),
-            )}
+            );
+            setLoading(false);
+          }}
         />
         <Show when={stage() >= 2}>
           <ChunksList chunks={chunks} />
@@ -91,10 +96,15 @@ export default function Home() {
           </h2>
           <button
             class="w-full"
-            onclick={async () =>
+            aria-busy={loading()}
+            disabled={loading()}
+            onclick={async () => {
+              setLoading(true);
               setEmbeddings(
                 await getTextWithEmbeddings(chunks().flatMap((chunk) => chunk)),
-              )}
+              );
+              setLoading(false);
+            }}
           >
             Get Embeddings
           </button>
@@ -105,7 +115,10 @@ export default function Home() {
               Step 4. Query Similar Embeddings
             </h2>
             <QueryInput
+              loading={loading}
               onSubmit={async (query) => {
+                setLoading(true);
+
                 const [queryEmbeddings] = await getEmbeddings([query]);
 
                 setSimilarChunks(
@@ -117,6 +130,8 @@ export default function Home() {
                     ),
                   })).toSorted((a, b) => b.similarity - a.similarity),
                 );
+
+                setLoading(false);
               }}
             />
             <Show when={stage() >= 4}>

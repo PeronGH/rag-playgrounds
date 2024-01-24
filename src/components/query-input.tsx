@@ -1,10 +1,13 @@
-import { Component } from "solid-js";
+import { Accessor, Component } from "solid-js";
 
 export interface QueryInputProps {
+  loading?: Accessor<boolean>;
   onSubmit: (query: string) => void;
 }
 
-export const QueryInput: Component<QueryInputProps> = ({ onSubmit }) => {
+export const QueryInput: Component<QueryInputProps> = (
+  { onSubmit, loading },
+) => {
   return (
     <form
       role="search"
@@ -20,7 +23,12 @@ export const QueryInput: Component<QueryInputProps> = ({ onSubmit }) => {
         type="search"
         placeholder="Enter your query..."
       />
-      <input type="submit" value="Query" />
+      <input
+        aria-busy={loading?.()}
+        disabled={loading?.()}
+        type="submit"
+        value="Query"
+      />
     </form>
   );
 };

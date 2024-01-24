@@ -1,9 +1,10 @@
-import { Component, createSignal } from "solid-js";
+import { Accessor, Component, createSignal } from "solid-js";
 
 export interface DocumentChunkingSettingsProps {
   chunkSizeRange?: [number, number];
   chunkOverlapRange?: [number, number];
   onSubmit(o: { chunkSize: number; chunkOverlap: number }): void;
+  loading?: Accessor<boolean>;
 }
 
 export const DocumentChunkingSettings: Component<
@@ -55,7 +56,11 @@ export const DocumentChunkingSettings: Component<
           />
         </label>
       </div>
-      <button type="submit">
+      <button
+        type="submit"
+        aria-busy={props.loading?.()}
+        disabled={props.loading?.()}
+      >
         Chunk Documents
       </button>
     </form>
