@@ -13,7 +13,7 @@
     "autoprefixer": "^10.4.14",
     "llamaindex": "^0.0.48",
     "mathjs": "^12.3.0",
-    "openai": "^4.25.0",
+    "openai": "^4.26.0",
     "postcss": "^8.4.26",
     "solid-js": "^1.8.11",
     "tailwindcss": "^3.3.3",

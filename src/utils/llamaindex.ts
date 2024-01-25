@@ -1,7 +1,6 @@
 import { Document, SimpleNodeParser } from "llamaindex";
 import OpenAI from "openai";
 
-
 export interface ChunkDocumentsParams {
   documents: string[];
   chunkSize?: number;
@@ -31,7 +30,7 @@ export async function getEmbeddings(texts: string[]): Promise<number[][]> {
 
   const { data } = await openai.embeddings.create({
     input: texts,
-    model: "text-embedding-ada-002",
+    model: "text-embedding-3-small",
   });
 
   return data.map(({ embedding }) => embedding);
